@@ -19,11 +19,15 @@ while ($configFile=~/^(.*)$/gm) {
 print "OBJ:".$MOZOBJDIR."\n";
 print "SRC:".$MOZSRCDIR."\n";
 my $MOZAPPDIR="";
+my $MOZAPPNAME="";
 my $autoConfR = `cat $MOZOBJDIR/config/autoconf.mk`;
 while ($autoConfR=~/^(.*)$/gm) {
   my $line = $1;
   if ($line=~/^MOZ_BUILD_APP\s*\=\s*(.*)$/) {
     $MOZAPPDIR=$1;
+  }
+  if ($line=~/^MOZ_APP_NAME\s*\=\s*(.*)$/) {
+    $MOZAPPNAME=$1;
   }
 }
 
@@ -50,10 +54,6 @@ while (<$mfh>) {
 }
 close($mfh);
 
-#@_REPLACE_OBJ_PROJECT_PATH@^C
-#@_REPLACE_OBJ_PATH@^C
-#@_REPLACE_APP_NAME@
-#
 mkdir("src");
 my $sources = `find $mansdirectories -name *.java`;
 print "sources:".$sources.", mansdir: $mansdirectories \n";
@@ -171,7 +171,7 @@ while ($resources=~/^(.*)$/gm) {
   if (stat("bin/$file")) {
     unlink("bin/$file");
   }
-  symlink($resdir, "bin/$file");
+  symlink($resdir, "bin/resources.ap_");
 }
 
 $resources = `find $manodirectories -type f -name "*.dex"`;
@@ -182,8 +182,22 @@ while ($resources=~/^(.*)$/gm) {
   if (stat("bin/$file")) {
     unlink("bin/$file");
   }
-  symlink($resdir, "bin/$file");
+  symlink($resdir, "bin/classes.dex");
 }
+
+$resources = `find $MOZOBJDIR/dist -name "*.apk"`;
+chomp($resources);
+while ($resources=~/^(.*)$/gm) {
+  my $resdir = $1;
+  if ($resdir=~/$MOZAPPNAME/) {
+    my ($volume,$directories,$file) = File::Spec->splitpath($resdir);
+    if (stat("bin/$mainactivityname.apk")) {
+      unlink("bin/$mainactivityname.apk");
+    }
+    symlink($resdir, "bin/$mainactivityname.apk");
+  }
+}
+
 
 system("cp -rf ztemplates/.classpath .");
 system("cp -rf ztemplates/project.properties .");
