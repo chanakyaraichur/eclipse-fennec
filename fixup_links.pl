@@ -31,6 +31,7 @@ while ($autoConfR=~/^(.*)$/gm) {
   }
 }
 
+print "APPNAME:".$MOZAPPNAME."\n";
 print "APPDIR:".$MOZAPPDIR."\n";
 my $manifest = `find $MOZOBJDIR/$MOZAPPDIR -name AndroidManifest.xml`;
 chomp($manifest);
