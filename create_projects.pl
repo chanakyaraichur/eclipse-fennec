@@ -4,10 +4,30 @@ use  strict;
 use File::Spec;
 use Data::Dumper;
 
-my $MOZOBJDIR="/scratchbox/users/romaxa/home/romaxa/mozdev/mozillahg/mozilla-birch/obj-i686-pc-linux-gnu";
-my $MOZSRCDIR="/scratchbox/users/romaxa/home/romaxa/mozdev/mozillahg/mozilla-birch";
-my $MOZAPPDIR="mobile/android";
+my $MOZOBJDIR="";
+my $MOZSRCDIR="";
+my $configFile=`cat mozconfig_values`;
+while ($configFile=~/^(.*)$/gm) {
+  my $line = $1;
+  if ($line=~/MOZOBJDIR\s*\=\s*(.*)/) {
+    $MOZOBJDIR=$1;
+  }
+  if ($line=~/MOZSRCDIR\s*\=\s*(.*)/) {
+    $MOZSRCDIR=$1;
+  }
+}
+print "OBJ:".$MOZOBJDIR."\n";
+print "SRC:".$MOZSRCDIR."\n";
+my $MOZAPPDIR="";
+my $autoConfR = `cat $MOZOBJDIR/config/autoconf.mk`;
+while ($autoConfR=~/^(.*)$/gm) {
+  my $line = $1;
+  if ($line=~/^MOZ_BUILD_APP\s*\=\s*(.*)$/) {
+    $MOZAPPDIR=$1;
+  }
+}
 
+print "APPDIR:".$MOZAPPDIR."\n";
 my $manifest = `find $MOZOBJDIR/$MOZAPPDIR -name AndroidManifest.xml`;
 if (stat("AndroidManifest.xml")) {
   unlink("AndroidManifest.xml");
