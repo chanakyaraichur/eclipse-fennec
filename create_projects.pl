@@ -53,6 +53,7 @@ while (<$mfh>) {
   }
 }
 close($mfh);
+system("sed 's|android:debuggable=\"false\"|android:debuggable=\"true\"|' -i $manifest");
 
 mkdir("src");
 my $sources = `find $mansdirectories -name *.java`;
@@ -168,8 +169,8 @@ chomp($resources);
 while ($resources=~/^(.*)$/gm) {
   my $resdir = $1;
   my ($volume,$directories,$file) = File::Spec->splitpath($resdir);
-  if (stat("bin/$file")) {
-    unlink("bin/$file");
+  if (stat("bin/resources.ap_")) {
+    unlink("bin/resources.ap_");
   }
   symlink($resdir, "bin/resources.ap_");
 }
@@ -179,8 +180,8 @@ chomp($resources);
 while ($resources=~/^(.*)$/gm) {
   my $resdir = $1;
   my ($volume,$directories,$file) = File::Spec->splitpath($resdir);
-  if (stat("bin/$file")) {
-    unlink("bin/$file");
+  if (stat("bin/classes.dex")) {
+    unlink("bin/classes.dex");
   }
   symlink($resdir, "bin/classes.dex");
 }
@@ -197,7 +198,6 @@ while ($resources=~/^(.*)$/gm) {
     symlink($resdir, "bin/$mainactivityname.apk");
   }
 }
-
 
 system("cp -rf ztemplates/.classpath .");
 system("cp -rf ztemplates/project.properties .");
