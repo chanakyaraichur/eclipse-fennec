@@ -3,6 +3,10 @@
 
 1) edit mozconfig_values
    add path to obj-build-dir and source dir
+   path must be absolute
+Ex:
+MOZOBJDIR=/home/romaxa/mozdev/mozillahg/mozilla-birch/objdir-droid
+MOZSRCDIR=/home/romaxa/mozdev/mozillahg/mozilla-birch
 
 2) run ./create_projects.pl
    eclipse project will be created in current folder
