@@ -44,15 +44,20 @@ my ($mansvolume,$mansdirectories,$mansfile) = File::Spec->splitpath($smanifest);
 system("ln -s $manifest > /dev/null");
 print "Adding Manifest from: $manifest\n";
 my $mainactivityname = "";
+my $projectName="";
 open(my $mfh, '<', $manifest) or die $!;
 while (<$mfh>) {
-  if (/\<activity android\:name\=\"(.*)\"/) {
+  if (/\s*package\s*\=\s*\"(.*)\"/) {
+    $projectName = $1;
+  } elsif (/\<activity android\:name\=\"(.*)\"/) {
     $mainactivityname = $1;
     print "Main Activity:".$mainactivityname."\n";
     close($mfh);
   }
 }
 close($mfh);
+print "project: $projectName, activity: $mainactivityname\n";
+
 system("sed 's|android:debuggable=\"false\"|android:debuggable=\"true\"|' -i $manifest");
 
 mkdir("src");
@@ -208,6 +213,9 @@ mkdir ".externalToolBuilders";
 system("cp -rf ztemplates/*.launch .externalToolBuilders/");
 system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."|\" -i .externalToolBuilders/*.launch");
 system("sed \"s|\@_REPLACE_OBJ_PATH\@|".$MOZOBJDIR."|\" -i .externalToolBuilders/*.launch");
+system("cp -rf ztemplates/_PROJECT_ACTIVITY_TEMPLATE.launch bin/$mainactivityname.launch");
+system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i bin/$mainactivityname.launch");
+system("sed \"s/\@_PACKAGE_NAME_\@/".$projectName."/\" -i bin/$mainactivityname.launch");
 
 mkdir ".settings";
 system("cp -rf ztemplates/org.eclipse.jdt.core.prefs .settings/");
