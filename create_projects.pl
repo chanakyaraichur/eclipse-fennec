@@ -30,6 +30,9 @@ while ($autoConfR=~/^(.*)$/gm) {
     $MOZAPPNAME=$1;
   }
 }
+if ($MOZAPPDIR=~/^mobile$/ || $MOZAPPDIR=~/mobile\/xul/) {
+  $MOZAPPDIR="embedding/android";
+}
 print "APPNAME:".$MOZAPPNAME."\n";
 print "APPDIR:".$MOZAPPDIR."\n";
 my $manifest = `find $MOZOBJDIR/$MOZAPPDIR -name AndroidManifest.xml`;
