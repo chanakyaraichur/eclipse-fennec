@@ -7,20 +7,22 @@ system("/usr/bin/perl refresh_projects.pl ");
 
 my $MOZOBJDIR="";
 my $MOZSRCDIR="";
-my $PROJECTDIR="";
+my $WORKSPACEDIR="";
+my $PROJECTNAME="";
 my $configFile=`cat mozconfig_values`;
 while ($configFile=~/^(.*)$/gm) {
   my $line = $1;
   if ($line=~/MOZOBJDIR\s*\=\s*(.*)/) {
     $MOZOBJDIR=$1;
-  }
-  if ($line=~/MOZSRCDIR\s*\=\s*(.*)/) {
+  } elsif ($line=~/MOZSRCDIR\s*\=\s*(.*)/) {
     $MOZSRCDIR=$1;
-  }
-  if ($line=~/WORKSPACEDIR\s*\=\s*(.*)/) {
-    $PROJECTDIR=$1."/Fennec";
+  } elsif ($line=~/WORKSPACEDIR\s*\=\s*(.*)/) {
+    $WORKSPACEDIR=$1;
+  } elsif ($line=~/PROJECTNAME\s*\=\s*(.*)/) {
+    $PROJECTNAME=$1;
   }
 }
+my $PROJECTDIR = "$WORKSPACEDIR/$PROJECTNAME";
 
 my $MOZAPPDIR="";
 my $COMPATLIBJAR="";
