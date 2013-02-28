@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use  strict;
+use File::Spec;
 
 system("/usr/bin/perl refresh_projects.pl ");
 
@@ -22,11 +23,14 @@ while ($configFile=~/^(.*)$/gm) {
 }
 
 my $MOZAPPDIR="";
+my $COMPATLIBJAR="";
 my $autoConfR = `cat $MOZOBJDIR/config/autoconf.mk`;
 while ($autoConfR=~/^(.*)$/gm) {
   my $line = $1;
   if ($line=~/^MOZ_BUILD_APP\s*\=\s*(.*)$/) {
     $MOZAPPDIR=$1;
+  } elsif ($line=~/^ANDROID_COMPAT_LIB\s*\=\s*(.*)$/) {
+    $COMPATLIBJAR=$1;
   }
 }
 
@@ -47,6 +51,7 @@ while (<$mfh>) {
 }
 close($mfh);
 
+mkdir $PROJECTDIR;
 system("cp -rf ztemplates/.classpath $PROJECTDIR/");
 system("cp -rf ztemplates/project.properties $PROJECTDIR/");
 system("cp -rf ztemplates/.project $PROJECTDIR/");
@@ -63,3 +68,39 @@ system("sed \"s/\@_PACKAGE_NAME_\@/".$projectName."/\" -i $PROJECTDIR/bin/$maina
 mkdir "$PROJECTDIR/.settings";
 system("cp -rf ztemplates/org.eclipse.jdt.core.prefs $PROJECTDIR/.settings/");
 
+mkdir "$PROJECTDIR/jars";
+
+# link android compatibility library jar
+my ($volume,$directories,$file) = File::Spec->splitpath($COMPATLIBJAR);
+if (stat("$PROJECTDIR/jars/$file")) {
+  unlink("$PROJECTDIR/jars/$file");
+}
+system("ln -s $COMPATLIBJAR $PROJECTDIR/jars/");
+
+# link robotium jar
+my $testjars = `find $MOZSRCDIR/build/mobile/robocop -name "*.jar"`;
+while ($testjars=~/^(.*)$/gm) {
+  my ($volume,$directories,$file) = File::Spec->splitpath($1);
+  if (stat("$PROJECTDIR/jars/$file")) {
+    unlink("$PROJECTDIR/jars/$file");
+  }
+  system("ln -s $1 $PROJECTDIR/jars/");
+}
+
+# link app jars
+my $appjars = `find $MOZOBJDIR/$MOZAPPDIR -name "*.jar"`;
+while ($appjars=~/^(.*)$/gm) {
+  my ($volume,$directories,$file) = File::Spec->splitpath($1);
+  if (stat("$PROJECTDIR/jars/$file")) {
+    unlink("$PROJECTDIR/jars/$file");
+  }
+  system("ln -s $1 $PROJECTDIR/jars/");
+}
+
+mkdir "$PROJECTDIR/classes";
+
+my $robocopclasses = "$MOZOBJDIR/build/mobile/robocop/classes";
+if (stat("$robocopclasses")) {
+  unlink("$robocopclasses");
+}
+symlink($robocopclasses, "$PROJECTDIR/classes/robocop");
