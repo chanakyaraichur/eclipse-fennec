@@ -61,7 +61,6 @@ system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i $PROJECTDIR/.p
 
 mkdir "$PROJECTDIR/.externalToolBuilders";
 system("cp -rf ztemplates/*.launch $PROJECTDIR/.externalToolBuilders/");
-system("sed \"s|\@_REPLACE_ECLIPSE_PROJECT_NAME\@|".$PROJECTNAME."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
 system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
 system("sed \"s|\@_REPLACE_OBJ_PATH\@|".$MOZOBJDIR."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
 system("cp -rf ztemplates/_PROJECT_ACTIVITY_TEMPLATE.launch $PROJECTDIR/bin/$mainactivityname.launch");
