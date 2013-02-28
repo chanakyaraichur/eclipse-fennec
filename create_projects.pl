@@ -36,7 +36,7 @@ while ($autoConfR=~/^(.*)$/gm) {
   }
 }
 
-my $manifest = `find $MOZOBJDIR/$MOZAPPDIR -name AndroidManifest.xml`;
+my $manifest = `find $MOZOBJDIR/$MOZAPPDIR/base -name AndroidManifest.xml`;
 chomp($manifest);
 
 my $mainactivityname = "";
@@ -61,8 +61,10 @@ system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i $PROJECTDIR/.p
 
 mkdir "$PROJECTDIR/.externalToolBuilders";
 system("cp -rf ztemplates/*.launch $PROJECTDIR/.externalToolBuilders/");
-system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
+system("sed \"s|\@_REPLACE_ECLIPSE_PROJECT_NAME\@|".$PROJECTNAME."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
+system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
 system("sed \"s|\@_REPLACE_OBJ_PATH\@|".$MOZOBJDIR."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
+system("cp -rf ztemplates/_PROJECT_ACTIVITY_TEMPLATE.launch $PROJECTDIR/bin/$mainactivityname.launch");
 system("cp -rf ztemplates/_PROJECT_ACTIVITY_TEMPLATE.launch $PROJECTDIR/bin/$mainactivityname.launch");
 system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i $PROJECTDIR/bin/$mainactivityname.launch");
 system("sed \"s/\@_PACKAGE_NAME_\@/".$projectName."/\" -i $PROJECTDIR/bin/$mainactivityname.launch");
@@ -90,7 +92,7 @@ while ($testjars=~/^(.*)$/gm) {
 }
 
 # link app jars
-my $appjars = `find $MOZOBJDIR/$MOZAPPDIR -name "*.jar"`;
+my $appjars = `find $MOZOBJDIR/$MOZAPPDIR/base -name "*.jar"`;
 while ($appjars=~/^(.*)$/gm) {
   my ($volume,$directories,$file) = File::Spec->splitpath($1);
   if (stat("$PROJECTDIR/jars/$file")) {

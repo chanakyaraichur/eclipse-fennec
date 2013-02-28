@@ -44,12 +44,12 @@ if ($MOZAPPDIR=~/^mobile$/ || $MOZAPPDIR=~/mobile\/xul/) {
 }
 print "APPNAME:".$MOZAPPNAME."\n";
 print "APPDIR:".$MOZAPPDIR."\n";
-my $manifest = `find $MOZOBJDIR/$MOZAPPDIR -name AndroidManifest.xml`;
+my $manifest = `find $MOZOBJDIR/$MOZAPPDIR/base -name AndroidManifest.xml`;
 if (stat("$PROJECTDIR/AndroidManifest.xml")) {
   unlink("$PROJECTDIR/AndroidManifest.xml");
 }
 chomp($manifest);
-my $smanifest = `find $MOZSRCDIR/$MOZAPPDIR -name AndroidManifest.xml.in`;
+my $smanifest = `find $MOZSRCDIR/$MOZAPPDIR/base -name AndroidManifest.xml.in`;
 chomp($smanifest);
 my ($manovolume,$manodirectories,$manofile) = File::Spec->splitpath($manifest);
 my ($mansvolume,$mansdirectories,$mansfile) = File::Spec->splitpath($smanifest);
