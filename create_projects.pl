@@ -71,6 +71,10 @@ system("sed \"s/\@_PACKAGE_NAME_\@/".$projectName."/\" -i $PROJECTDIR/bin/$maina
 mkdir "$PROJECTDIR/.settings";
 system("cp -rf ztemplates/org.eclipse.jdt.core.prefs $PROJECTDIR/.settings/");
 
+mkdir "$PROJECTDIR/scripts";
+system("cp -rf ztemplates/rebuild-presource.pl $PROJECTDIR/scripts/");
+system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/scripts/*");
+
 mkdir "$PROJECTDIR/jars";
 
 # link android compatibility library jar
