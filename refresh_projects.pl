@@ -38,6 +38,9 @@ while ($autoConfR=~/^(.*)$/gm) {
   if ($line=~/^MOZ_APP_NAME\s*\=\s*(.*)$/) {
     $MOZAPPNAME=$1;
   }
+  if (length $MOZAPPDIR > 0 && length $MOZAPPNAME > 0) {
+    last;
+  }
 }
 if ($MOZAPPDIR=~/^mobile$/ || $MOZAPPDIR=~/mobile\/xul/) {
   $MOZAPPDIR="embedding/android";
@@ -64,7 +67,7 @@ while (<$mfh>) {
   } elsif (/\<activity android\:name\=\"(.*)\"/) {
     $mainactivityname = $1;
     print "Main Activity:".$mainactivityname."\n";
-    close($mfh);
+    last;
   }
 }
 close($mfh);
@@ -90,6 +93,7 @@ while ($sources=~/^(.*)$/gm) {
       }
       system("mkdir -p $PROJECTDIR/src/$path");
       symlink($source, "$PROJECTDIR/src/$path/$file");
+      last;
     }
   }
   close($fh);
@@ -124,6 +128,7 @@ while ($gensources=~/^(.*)$/gm) {
       }
       system("mkdir -p $PROJECTDIR/gen/$path");
       symlink($source, "$PROJECTDIR/gen/$path/$file");
+      last;
     }
   }
   close($fh);
