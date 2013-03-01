@@ -74,6 +74,7 @@ print "project: $projectName, activity: $mainactivityname\n";
 
 system("sed 's|android:debuggable=\"false\"|android:debuggable=\"true\"|' -i $manifest");
 
+system("rm -rf $PROJECTDIR/src");
 mkdir("$PROJECTDIR/src");
 my $sources = `find $mansdirectories -name *.java`;
 print "sources:".$sources.", mansdir: $mansdirectories \n";

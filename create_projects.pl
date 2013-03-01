@@ -79,8 +79,8 @@ mkdir "$PROJECTDIR/.settings";
 system("cp -rf ztemplates/org.eclipse.jdt.core.prefs $PROJECTDIR/.settings/");
 
 mkdir "$PROJECTDIR/scripts";
-system("cp -rf ztemplates/rebuild-presource.pl $PROJECTDIR/scripts/");
-system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/scripts/*");
+system("cp -rf ztemplates/save-actions.pl $PROJECTDIR/scripts/");
+system("sed \"s|\@_REPLACE_MOZ_SRC_DIR\@|".$MOZSRCDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/scripts/*");
 
 mkdir "$PROJECTDIR/jars";
 
