@@ -29,17 +29,16 @@ print "PROJECT:".$PROJECTDIR."\n";
 mkdir $PROJECTDIR;
 my $MOZAPPDIR="";
 my $MOZAPPNAME="";
+my $PKGNAME="";
 my $autoConfR = `cat $MOZOBJDIR/config/autoconf.mk`;
 while ($autoConfR=~/^(.*)$/gm) {
   my $line = $1;
   if ($line=~/^MOZ_BUILD_APP\s*\=\s*(.*)$/) {
     $MOZAPPDIR=$1;
-  }
-  if ($line=~/^MOZ_APP_NAME\s*\=\s*(.*)$/) {
+  } elsif ($line=~/^MOZ_APP_NAME\s*\=\s*(.*)$/) {
     $MOZAPPNAME=$1;
-  }
-  if (length $MOZAPPDIR > 0 && length $MOZAPPNAME > 0) {
-    last;
+  } elsif ($line=~/^ANDROID_PACKAGE_NAME\s*\=\s*(.*)$/) {
+    $PKGNAME=$1;
   }
 }
 if ($MOZAPPDIR=~/^mobile$/ || $MOZAPPDIR=~/mobile\/xul/) {
@@ -100,38 +99,70 @@ while ($sources=~/^(.*)$/gm) {
 }
 
 my $presources = `find $mansdirectories -name *.java.in`;
+my $path = $PKGNAME;
+$path=~s/\./\//g;
+my $tmp = "/tmp/presources.out";
 while ($presources=~/^(.*)$/gm) {
   my $source = $1;
-  mkdir("$PROJECTDIR/src/presources");
-  my ($volume,$directories,$file) = File::Spec->splitpath($source);
-  $file=~s/\.in$//g;
-  print "$source > $PROJECTDIR/src/presources/$file\n";
-  if (stat("$PROJECTDIR/src/presources/$file")) {
-    unlink("$PROJECTDIR/src/presources/$file");
-  }
-  symlink($source, "$PROJECTDIR/src/presources/$file");
-}
-
-my $gensources = `find $manodirectories -name *.java`;
-while ($gensources=~/^(.*)$/gm) {
-  my $source = $1;
   open(my $fh, '<', $source) or die $!;
+  open(my $out, '>', $tmp) or die $!;
+  my $path;
+  my $ignored = 0;
   while (<$fh>) {
-    if (/^package\s+(.*)\;/) {
-      my $namespace = $1;
-      my $path = $namespace;
-      $path=~s/\./\//g;
-      my ($volume,$directories,$file) = File::Spec->splitpath($source);
-      print "Link $source > src/$path/$file\n";
-      if (stat("$PROJECTDIR/gen/$path/$file")) {
-        unlink("$PROJECTDIR/gen/$path/$file");
-      }
-      system("mkdir -p $PROJECTDIR/gen/$path");
-      symlink($source, "$PROJECTDIR/gen/$path/$file");
-      last;
+    my $replace = $_;
+    my $replaced = 0;
+    if ($_ =~ /\@ANDROID_PACKAGE_NAME@/) {
+      $replace=~s/\@ANDROID_PACKAGE_NAME@/$PKGNAME/g;
+      $replaced = 1;
     }
+    if ($_ =~ /\@MOZ_MIN_CPU_VERSION@/) {
+      $replace=~s/\@MOZ_MIN_CPU_VERSION@/0/g;
+      $replaced = 1;
+    }
+    if ($_ =~ /\@MOZ_BUILD_TIMESTAMP@/) {
+      $replace=~s/\@MOZ_BUILD_TIMESTAMP@/0/g;
+      $replaced = 1;
+    }
+    if ($replaced == 1) {
+      print $out "//gen-var:$_";
+    }
+
+    if ($ignored == 1) {
+      $replace = "//gen-preproc:$replace";
+    }
+
+    my $replace2 = $_;
+    $replace2=~s/\@ANDROID_PACKAGE_NAME@/$PKGNAME/g;
+
+    if ($replace2 =~ /^package\s+(.*)\;/) {
+      $path = $1;
+      $path=~s/\./\//g;
+      system("mkdir -p $PROJECTDIR/src/$path");
+    } elsif (/^#/) {
+      if (/^#ifdef/) {
+        $ignored = 1;
+        $replace = "//gen-preproc:$replace";
+      } elsif (/^#endif/) {
+        if ($ignored == 1) {
+          $ignored = 0;
+        } else {
+          $replace = "//gen-preproc:$replace";
+        }
+      } elsif (/^#else/) {
+        $ignored = 0;
+      } else {
+        $replace = "//gen-preproc:$replace";
+      }
+    }
+
+    print $out $replace;
   }
   close($fh);
+  close($out);
+
+  my ($volume,$directories,$file) = File::Spec->splitpath($source);
+  $file=~s/\.in$//g;
+  rename $tmp, "$PROJECTDIR/src/$path/$file";
 }
 
 my $resources = "";

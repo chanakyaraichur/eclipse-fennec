@@ -26,6 +26,7 @@ my $PROJECTDIR = "$WORKSPACEDIR/$PROJECTNAME";
 
 my $MOZAPPDIR="";
 my $COMPATLIBJAR="";
+my $PKGNAME="";
 my $autoConfR = `cat $MOZOBJDIR/config/autoconf.mk`;
 while ($autoConfR=~/^(.*)$/gm) {
   my $line = $1;
@@ -33,6 +34,8 @@ while ($autoConfR=~/^(.*)$/gm) {
     $MOZAPPDIR=$1;
   } elsif ($line=~/^ANDROID_COMPAT_LIB\s*\=\s*(.*)$/) {
     $COMPATLIBJAR=$1;
+  } elsif ($line=~/^ANDROID_PACKAGE_NAME\s*\=\s*(.*)$/) {
+    $PKGNAME=$1;
   }
 }
 
@@ -48,13 +51,16 @@ while (<$mfh>) {
   } elsif (/\<activity android\:name\=\"(.*)\"/) {
     $mainactivityname = $1;
     print "Main Activity:".$mainactivityname."\n";
-    close($mfh);
+    last;
   }
 }
 close($mfh);
 
 mkdir $PROJECTDIR;
+my $pkgdir = $PKGNAME;
+$pkgdir =~ s/\./\//g;
 system("cp -rf ztemplates/.classpath $PROJECTDIR/");
+system("sed \"s|\@_REPLACE_PACKAGE_DIR\@|$pkgdir|\" -i $PROJECTDIR/.classpath");
 system("cp -rf ztemplates/project.properties $PROJECTDIR/");
 system("cp -rf ztemplates/.project $PROJECTDIR/");
 system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i $PROJECTDIR/.project");
