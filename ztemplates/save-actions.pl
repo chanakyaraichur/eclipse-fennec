@@ -3,15 +3,71 @@
 use  strict;
 use File::Spec;
 
-my $infile = $ARGV[0];
 my $outdir = "@_REPLACE_MOZ_SRC_DIR@";
-my ($volume,$directories,$file) = File::Spec->splitpath($infile);
-my $outfile = `find $outdir -name $file.in`;
-chomp($outfile);
+my $pkg = "@_REPLACE_PACKAGE_NAME@";
+my @pkgsplit = split(/\./, $pkg);
+my $pkgname = @pkgsplit[-1];
 
-if (length $outfile > 1) {
+my $infiles = `find res/ -type f`;
+while ($infiles=~/^(.*)$/gm) {
+    my $infile = $1;
+    chomp($infile);
+    my $outfile = "$outdir/$infile";
+    $outfile =~ s|/res/|/resources/|;
+
     open(my $fh, '<', $infile) or die $!;
+    if (my $line = <$fh>) {
+        chomp($line);
+        if ($line ne "<!--gen-presource-->") {
+            if (not stat($outfile)) {
+                # file was created in eclipse; add it to working tree
+                system("cp $infile $outfile");
+            }
+            next;
+        }
+    }
+
+    open(my $out, '>', "$outfile.in") or die $!;
+
+    while (<$fh>) {
+        my $line = $_;
+        if ($line =~ /^<!--gen-preproc:(.*)-->/) {
+            $line = "$1\n";
+        }
+        $line =~ s/$pkg/\@ANDROID_PACKAGE_NAME@/g;
+
+        print $out $line;
+    }
+    close($fh);
+    close($out);
+}
+
+
+my $infiles = `find src/org/mozilla/gecko src/org/mozilla/$pkgname -name "*.java" -not -wholename "*/sync/*"`;
+while ($infiles=~/^(.*)$/gm) {
+    my $infile = $1;
+    chomp($infile);
+    my ($volume,$directories,$file) = File::Spec->splitpath($infile);
+
+    open(my $fh, '<', $infile) or die $!;
+    if (my $line = <$fh>) {
+        chomp($line);
+        if ($line ne "//gen-presource") {
+            my $existing = `find $outdir -name $file`;
+            chomp $existing;
+            if (length $existing == 0) {
+                # file was created in eclipse; add it to working tree
+                my $outfile = "$outdir/$file";
+                system("cp $infile $outfile");
+            }
+            next;
+        }
+    }
+
+    my $outfile = `find $outdir -name $file.in`;
+    chomp($outfile);
     open(my $out, '>', $outfile) or die $!;
+
     my $skip = 0;
     while (<$fh>) {
         if ($skip == 1) {
@@ -20,21 +76,15 @@ if (length $outfile > 1) {
         }
 
         my $line = $_;
-        if ($line =~ /^\/\/gen-var:/) {
-            $line =~ s/^\/\/gen-var://;
+        if ($line =~ /^\/\/gen-preproc:(.*)/) {
+            $line = "$1\n";
+        } elsif ($line =~ /^\/\/gen-var:(.*)/) {
+            $line = "$1\n";
             $skip = 1;
-        } elsif ($line =~ /^\/\/gen-preproc:/) {
-            $line =~ s/^\/\/gen-preproc://;
         }
-        
+
         print $out $line;
     }
     close($fh);
     close($out);
-} else {
-    $outfile = `find $outdir -name $file`;
-    if (length $outfile == 0) {
-        # file was created in eclipse; add it to src/base
-        system("cp $infile $outdir/$file");
-    }
 }

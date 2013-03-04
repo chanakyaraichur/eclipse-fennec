@@ -80,7 +80,8 @@ system("cp -rf ztemplates/org.eclipse.jdt.core.prefs $PROJECTDIR/.settings/");
 
 mkdir "$PROJECTDIR/scripts";
 system("cp -rf ztemplates/save-actions.pl $PROJECTDIR/scripts/");
-system("sed \"s|\@_REPLACE_MOZ_SRC_DIR\@|".$MOZSRCDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/scripts/*");
+system("sed \"s|\@_REPLACE_MOZ_SRC_DIR\@|$MOZSRCDIR/$MOZAPPDIR/base|\" -i $PROJECTDIR/scripts/*");
+system("sed \"s|\@_REPLACE_PACKAGE_NAME\@|$PKGNAME|\" -i $PROJECTDIR/scripts/*");
 
 mkdir "$PROJECTDIR/jars";
 

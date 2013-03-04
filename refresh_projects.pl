@@ -109,6 +109,7 @@ while ($presources=~/^(.*)$/gm) {
   open(my $out, '>', $tmp) or die $!;
   my $path;
   my $ignored = 0;
+  print $out "//gen-presource\n";
   while (<$fh>) {
     my $replace = $_;
     my $replaced = 0;
@@ -128,7 +129,7 @@ while ($presources=~/^(.*)$/gm) {
       print $out "//gen-var:$_";
     }
 
-    if ($ignored == 1) {
+    if ($ignored > 0) {
       $replace = "//gen-preproc:$replace";
     }
 
@@ -141,17 +142,20 @@ while ($presources=~/^(.*)$/gm) {
       system("mkdir -p $PROJECTDIR/src/$path");
     } elsif (/^#/) {
       if (/^#ifdef/) {
-        $ignored = 1;
-        $replace = "//gen-preproc:$replace";
+        if ($ignored == 0) {
+          $replace = "//gen-preproc:$replace";
+        }
+        $ignored++;
       } elsif (/^#endif/) {
-        if ($ignored == 1) {
-          $ignored = 0;
+        if ($ignored > 0) {
+          $ignored--;
         } else {
           $replace = "//gen-preproc:$replace";
         }
-      } elsif (/^#else/) {
+      } elsif (/^#else/ && $ignored == 1) {
+        # don't ignore the outermost else block
         $ignored = 0;
-      } else {
+      } elsif ($ignored == 0) {
         $replace = "//gen-preproc:$replace";
       }
     }
@@ -167,13 +171,11 @@ while ($presources=~/^(.*)$/gm) {
 }
 
 my $resources = "";
-my $stop = 0;
 system("rm -rf $PROJECTDIR/res");
 mkdir("$PROJECTDIR/res");
 
-$resources = `find $mansdirectories -name "*.png" -o -name "*.xml"`;
-$stop = 0;
-while ($resources=~/^(.*)$/gm && $stop == 0) {
+$resources = `find $MOZSRCDIR/$MOZAPPDIR/base/resources/ -name "*.xml" -o -name "*.png"`;
+while ($resources=~/^(.*)$/gm) {
   my $resource = $1;
   my ($volume,$directories,$file) = File::Spec->splitpath($resource);
   my @dirs = File::Spec->splitdir($directories);
@@ -186,19 +188,59 @@ while ($resources=~/^(.*)$/gm && $stop == 0) {
   symlink($resource, "$PROJECTDIR/res/$folder/$file");
 }
 
-$resources = `find $manodirectories -name "*.png" -o -name "*.xml"`;
-while ($resources=~/^(.*)$/gm && $stop == 0) {
-  my $resource = $1;
-  my ($volume,$directories,$file) = File::Spec->splitpath($resource);
-  next if ($file eq "AndroidManifest.xml");
+$presources = `find $MOZSRCDIR/$MOZAPPDIR/base/resources/ -name "*.xml.in"`;
+while ($presources=~/^(.*)$/gm) {
+  my $source = $1;
+
+  my ($volume,$directories,$file) = File::Spec->splitpath($source);
   my @dirs = File::Spec->splitdir($directories);
   my $folder = $dirs[scalar(@dirs)-2];
-  print "resource: $resource, fold:$folder, file:$file\n";
-  if (stat("$PROJECTDIR/res/$folder/$file")) {
-    next;
-  }
+  my $outfile = "$PROJECTDIR/res/$folder/$file";
   system("mkdir -p $PROJECTDIR/res/$folder");
-  symlink($resource, "$PROJECTDIR/res/$folder/$file");
+  $outfile=~s/\.in$//g;
+
+  open(my $fh, '<', $source) or die $!;
+  open(my $out, '>', $outfile) or die $!;
+  my $ignored = 0;
+  print $out "<!--gen-presource-->\n";
+  while (<$fh>) {
+    my $replace = $_;
+    if ($_ =~ /\@ANDROID_PACKAGE_NAME@/) {
+      $replace=~s/\@ANDROID_PACKAGE_NAME@/$PKGNAME/g;
+    }
+
+    if ($ignored > 0) {
+      chomp($replace);
+      $replace = "<!--gen-preproc:$replace-->\n";
+    }
+
+    if (/^#/) {
+      if (/^#ifdef/) {
+        if ($ignored == 0) {
+          chomp($replace);
+          $replace = "<!--gen-preproc:$replace-->\n";
+        }
+        $ignored++;
+      } elsif (/^#endif/) {
+        if ($ignored > 0) {
+          $ignored--;
+        } else {
+          chomp($replace);
+          $replace = "<!--gen-preproc:$replace-->\n";
+        }
+      } elsif (/^#else/ && $ignored == 1) {
+        # don't ignore the outermost else block
+        $ignored = 0;
+      } elsif ($ignored == 0) {
+        chomp($replace);
+        $replace = "<!--gen-preproc:$replace-->\n";
+      }
+    }
+
+    print $out $replace;
+  }
+  close($fh);
+  close($out);
 }
 
 system("rm -rf $PROJECTDIR/bin");
