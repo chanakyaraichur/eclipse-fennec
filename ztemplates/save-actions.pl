@@ -43,6 +43,19 @@ while ($infiles=~/^(.*)$/gm) {
 }
 
 
+sub copy_new_file {
+    my $infile = $_[0];
+    my $file = $_[1];
+
+    my $existing = `find $outdir -name $file`;
+    chomp $existing;
+    if (length $existing == 0) {
+        # file was created in eclipse; add it to working tree
+        my $outfile = "$outdir/$file";
+        system("cp $infile $outfile");
+    }
+}
+
 my $infiles = `find src/org/mozilla/gecko src/org/mozilla/$pkgname -name "*.java" -not -wholename "*/sync/*"`;
 while ($infiles=~/^(.*)$/gm) {
     my $infile = $1;
@@ -53,19 +66,17 @@ while ($infiles=~/^(.*)$/gm) {
     if (my $line = <$fh>) {
         chomp($line);
         if ($line ne "//gen-presource") {
-            my $existing = `find $outdir -name $file`;
-            chomp $existing;
-            if (length $existing == 0) {
-                # file was created in eclipse; add it to working tree
-                my $outfile = "$outdir/$file";
-                system("cp $infile $outfile");
-            }
+            copy_new_file($infile, $file);
             next;
         }
     }
 
     my $outfile = `find $outdir -name $file.in`;
     chomp($outfile);
+    if (length $outfile == 0) {
+        copy_new_file($infile, "$file.in");
+        next;
+    }
     open(my $out, '>', $outfile) or die $!;
 
     my $skip = 0;
