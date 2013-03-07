@@ -1,4 +1,4 @@
-MOZOBJDIR=/home/brian/mozilla/inbound/objdir-droid
-MOZSRCDIR=/home/brian/mozilla/inbound
-WORKSPACEDIR=/home/brian/workspace
+MOZOBJDIR=PATH_TO_OBJ_DIR_ROOT
+MOZSRCDIR=PATH_TO_SRC_DIR_ROOT
+WORKSPACEDIR=PATH_TO_ECLIPSE_WORKSPACE_ROOT
 PROJECTNAME=Fennec

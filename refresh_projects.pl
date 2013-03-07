@@ -4,9 +4,6 @@ use  strict;
 use File::Spec;
 use Data::Dumper;
 
-open(MYFILE, ">>/tmp/lock") || die;
-flock(MYFILE, 2) || die;
-
 my $MOZOBJDIR="";
 my $MOZSRCDIR="";
 my $WORKSPACEDIR="";
@@ -77,9 +74,6 @@ print "project: $projectName, activity: $mainactivityname\n";
 
 system("sed 's|android:debuggable=\"false\"|android:debuggable=\"true\"|' -i $manifest");
 
-system("mkdir -p $PROJECTDIR/scripts");
-open(my $source_index_fh, '>', "$PROJECTDIR/scripts/sources.index") or die $!;
-
 system("rm -rf $PROJECTDIR/src");
 mkdir("$PROJECTDIR/src");
 my $sources = `find $mansdirectories -name *.java`;
@@ -93,13 +87,12 @@ while ($sources=~/^(.*)$/gm) {
       my $path = $namespace;
       $path=~s/\./\//g;
       my ($volume,$directories,$file) = File::Spec->splitpath($source);
-      my $outlink = "$PROJECTDIR/src/$path/$file";
-      print "Link $source > $outlink\n";
+      print "Link $source > src/$path/$file\n";
+      if (stat("$PROJECTDIR/src/$path/$file")) {
+        unlink("$PROJECTDIR/src/$path/$file");
+      }
       system("mkdir -p $PROJECTDIR/src/$path");
-      system("ln -sf $source $outlink");
-
-      print $source_index_fh "link:$source:src/$path/$file\n";
-
+      symlink($source, "$PROJECTDIR/src/$path/$file");
       last;
     }
   }
@@ -174,10 +167,7 @@ while ($presources=~/^(.*)$/gm) {
 
   my ($volume,$directories,$file) = File::Spec->splitpath($source);
   $file=~s/\.in$//g;
-  my $outfile = "$PROJECTDIR/src/$path/$file";
-  rename $tmp, $outfile;
-
-  print $source_index_fh "presource:$source:src/$path/$file\n";
+  rename $tmp, "$PROJECTDIR/src/$path/$file";
 }
 
 my $resources = "";
@@ -191,14 +181,11 @@ while ($resources=~/^(.*)$/gm) {
   my @dirs = File::Spec->splitdir($directories);
   my $folder = $dirs[scalar(@dirs)-2];
   print "resource: $resource, fold:$folder, file:$file\n";
-  my $outlink = "$PROJECTDIR/res/$folder/$file";
-  if (stat($outlink)) {
-    unlink($outlink);
+  if (stat("$PROJECTDIR/res/$folder/$file")) {
+    unlink("$PROJECTDIR/res/$folder/$file");
   }
   system("mkdir -p $PROJECTDIR/res/$folder");
-  symlink($resource, $outlink);
-
-  print $source_index_fh "link:$resource:res/$folder/$file\n";
+  symlink($resource, "$PROJECTDIR/res/$folder/$file");
 }
 
 $presources = `find $MOZSRCDIR/$MOZAPPDIR/base/resources/ -name "*.xml.in"`;
@@ -254,13 +241,7 @@ while ($presources=~/^(.*)$/gm) {
   }
   close($fh);
   close($out);
-
-  my $outfile2 = "res/$folder/$file";
-  $outfile2 =~ s/\.in$//g;
-  print $source_index_fh "presource:$source:$outfile2\n";
 }
-
-close($source_index_fh);
 
 system("rm -rf $PROJECTDIR/bin");
 mkdir("$PROJECTDIR/bin");
@@ -313,5 +294,3 @@ while ($resources=~/^(.*)$/gm) {
     symlink($resdir, "$PROJECTDIR/bin/$mainactivityname.apk");
   }
 }
-
-close(MYFILE);
