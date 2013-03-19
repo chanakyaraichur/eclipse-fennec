@@ -27,6 +27,15 @@ while ($infiles=~/^(.*)$/gm) {
         }
     }
 
+    if (stat "$outfile.in") {
+        my $mtimedst = stat("$outfile.in")->mtime;
+        my $mtimesrc = stat("$infile")->mtime;
+        if ($mtimedst > $mtimesrc) {
+            # dest is newer than src; abort
+            next;
+        }
+    }
+
     open(my $out, '>', "$outfile.in") or die $!;
 
     while (<$fh>) {
@@ -77,6 +86,16 @@ while ($infiles=~/^(.*)$/gm) {
         copy_new_file($infile, "$file.in");
         next;
     }
+
+    if (stat "$outfile") {
+        my $mtimedst = stat("$outfile")->mtime;
+        my $mtimesrc = stat("$infile")->mtime;
+        if ($mtimedst > $mtimesrc) {
+            # dest is newer than src; abort
+            next;
+        }
+    }
+
     open(my $out, '>', $outfile) or die $!;
 
     my $skip = 0;
