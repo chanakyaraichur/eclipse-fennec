@@ -3,6 +3,14 @@
 use  strict;
 use File::Spec;
 
+sub sed {
+  if ($^O eq "linux") {
+    `sed \"$_[0]\" -i $_[1]`;
+  } else {
+    `sed -i '' \"$_[0]\" $_[1]`;
+  }
+}
+
 system("/usr/bin/perl refresh_projects.pl ");
 
 my $MOZOBJDIR="";
@@ -60,28 +68,28 @@ mkdir $PROJECTDIR;
 my $pkgdir = $PKGNAME;
 $pkgdir =~ s/\./\//g;
 system("cp -rf ztemplates/.classpath $PROJECTDIR/");
-system("sed \"s|\@_REPLACE_PACKAGE_DIR\@|$pkgdir|\" -i $PROJECTDIR/.classpath");
+sed("s|\@_REPLACE_PACKAGE_DIR\@|$pkgdir|", "$PROJECTDIR/.classpath");
 system("cp -rf ztemplates/project.properties $PROJECTDIR/");
 system("cp -rf ztemplates/.project $PROJECTDIR/");
-system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i $PROJECTDIR/.project");
+sed("s/\@_REPLACE_APP_NAME\@/$mainactivityname/", "$PROJECTDIR/.project");
 
 mkdir "$PROJECTDIR/.externalToolBuilders";
 system("cp -rf ztemplates/*.launch $PROJECTDIR/.externalToolBuilders/");
-system("sed \"s|\@_REPLACE_OBJ_PROJECT_PATH\@|".$MOZOBJDIR."/".$MOZAPPDIR."/base|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
-system("sed \"s|\@_REPLACE_OBJ_PATH\@|".$MOZOBJDIR."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
-system("sed \"s|\@_REPLACE_PROJECT_NAME\@|".$PROJECTNAME."|\" -i $PROJECTDIR/.externalToolBuilders/*.launch");
+sed("s|\@_REPLACE_OBJ_PROJECT_PATH\@|$MOZOBJDIR/$MOZAPPDIR/base|", "$PROJECTDIR/.externalToolBuilders/*.launch");
+sed("s|\@_REPLACE_OBJ_PATH\@|$MOZOBJDIR|", "$PROJECTDIR/.externalToolBuilders/*.launch");
+sed("s|\@_REPLACE_PROJECT_NAME\@|$PROJECTNAME|", "$PROJECTDIR/.externalToolBuilders/*.launch");
 system("cp -rf ztemplates/_PROJECT_ACTIVITY_TEMPLATE.launch $PROJECTDIR/bin/$mainactivityname.launch");
 system("cp -rf ztemplates/_PROJECT_ACTIVITY_TEMPLATE.launch $PROJECTDIR/bin/$mainactivityname.launch");
-system("sed \"s/\@_REPLACE_APP_NAME\@/".$mainactivityname."/\" -i $PROJECTDIR/bin/$mainactivityname.launch");
-system("sed \"s/\@_PACKAGE_NAME_\@/".$projectName."/\" -i $PROJECTDIR/bin/$mainactivityname.launch");
+sed("s/\@_REPLACE_APP_NAME\@/$mainactivityname/", "$PROJECTDIR/bin/$mainactivityname.launch");
+sed("s/\@_PACKAGE_NAME_\@/$projectName/", "$PROJECTDIR/bin/$mainactivityname.launch");
 
 mkdir "$PROJECTDIR/.settings";
 system("cp -rf ztemplates/org.eclipse.jdt.core.prefs $PROJECTDIR/.settings/");
 
 mkdir "$PROJECTDIR/scripts";
 system("cp -rf ztemplates/save-actions.pl $PROJECTDIR/scripts/");
-system("sed \"s|\@_REPLACE_MOZ_SRC_DIR\@|$MOZSRCDIR/$MOZAPPDIR/base|\" -i $PROJECTDIR/scripts/*");
-system("sed \"s|\@_REPLACE_PACKAGE_NAME\@|$PKGNAME|\" -i $PROJECTDIR/scripts/*");
+sed("s|\@_REPLACE_MOZ_SRC_DIR\@|$MOZSRCDIR/$MOZAPPDIR/base|", "$PROJECTDIR/scripts/*");
+sed("s|\@_REPLACE_PACKAGE_NAME\@|$PKGNAME|", "$PROJECTDIR/scripts/*");
 
 mkdir "$PROJECTDIR/jars";
 
