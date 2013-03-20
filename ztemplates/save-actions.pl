@@ -9,6 +9,11 @@ sub file_exists {
     return ($? == 0);
 }
 
+my $outdir = "@_REPLACE_MOZ_SRC_DIR@";
+my $pkg = "@_REPLACE_PACKAGE_NAME@";
+my @pkgsplit = split(/\./, $pkg);
+my $pkgname = @pkgsplit[-1];
+
 sub copy_new_file {
     my $infile = $_[0];
     my $file = $_[1];
@@ -21,11 +26,6 @@ sub copy_new_file {
         system("cp $infile $outfile");
     }
 }
-
-my $outdir = "@_REPLACE_MOZ_SRC_DIR@";
-my $pkg = "@_REPLACE_PACKAGE_NAME@";
-my @pkgsplit = split(/\./, $pkg);
-my $pkgname = @pkgsplit[-1];
 
 my $infiles = `find res/ -type f`;
 while ($infiles=~/^(.*)$/gm) {
