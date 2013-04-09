@@ -12,6 +12,8 @@ my $PROJECTNAME="";
 my $configFile=`cat mozconfig_values`;
 while ($configFile=~/^(.*)$/gm) {
   my $line = $1;
+  $line =~ s{\$(\w+)}{ exists $ENV{$1} ? $ENV{$1} : q/$/.$1 }ge;
+  $line =~ s{\$\{(\w+)\}}{ exists $ENV{$1} ? $ENV{$1} : q/${/.$1.q/}/ }ge;
   if ($line=~/MOZOBJDIR\s*\=\s*(.*)/) {
     $MOZOBJDIR=$1;
   } elsif ($line=~/MOZSRCDIR\s*\=\s*(.*)/) {
