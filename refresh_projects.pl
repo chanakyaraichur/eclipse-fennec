@@ -4,6 +4,14 @@ use  strict;
 use File::Spec;
 use Data::Dumper;
 
+sub sed {
+  if ($^O eq "linux") {
+    `sed \"$_[0]\" -i $_[1]`;
+  } else {
+    `sed -i '' \"$_[0]\" $_[1]`;
+  }
+}
+
 my $MOZOBJDIR="";
 my $MOZSRCDIR="";
 my $WORKSPACEDIR="";
@@ -76,7 +84,7 @@ while (<$mfh>) {
 close($mfh);
 print "project: $projectName, activity: $mainactivityname\n";
 
-system("sed 's|android:debuggable=\"false\"|android:debuggable=\"true\"|' -i $manifest");
+sed('s|android:debuggable="false"|android:debuggable="true"|', $manifest);
 
 system("rm -rf $PROJECTDIR/src");
 mkdir("$PROJECTDIR/src");
