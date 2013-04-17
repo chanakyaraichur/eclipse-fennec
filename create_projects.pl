@@ -20,6 +20,8 @@ my $PROJECTNAME="";
 my $configFile=`cat mozconfig_values`;
 while ($configFile=~/^(.*)$/gm) {
   my $line = $1;
+  $line =~ s{\$(\w+)}{ exists $ENV{$1} ? $ENV{$1} : q/$/.$1 }ge;
+  $line =~ s{\$\{(\w+)\}}{ exists $ENV{$1} ? $ENV{$1} : q/${/.$1.q/}/ }ge;
   if ($line=~/MOZOBJDIR\s*\=\s*(.*)/) {
     $MOZOBJDIR=$1;
   } elsif ($line=~/MOZSRCDIR\s*\=\s*(.*)/) {
@@ -127,3 +129,10 @@ if (stat("$robocopclasses")) {
   unlink("$robocopclasses");
 }
 symlink($robocopclasses, "$PROJECTDIR/classes/robocop");
+
+system('android update project --path "' + $WORKSPACEDIR + '" --subprojects --target ' +
+          '"android-$(' +
+           'android list | grep -o android-[1-9][0-9]* | grep -o [1-9][0-9]* |  sort -nr | head -n 1' +
+          ')"');
+
+
