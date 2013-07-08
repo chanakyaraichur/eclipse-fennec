@@ -137,6 +137,10 @@ while ($presources=~/^(.*)$/gm) {
       $replace=~s/\@MOZ_BUILD_TIMESTAMP@/0/g;
       $replaced = 1;
     }
+    if ($_ =~ /\@MOZILLA_VERSION@/) {
+      $replace=~s/\@MOZILLA_VERSION@/""/g;
+      $replaced = 1;
+    }
     if ($replaced == 1) {
       print $out "//gen-var:$_";
     }
@@ -153,7 +157,7 @@ while ($presources=~/^(.*)$/gm) {
       $path=~s/\./\//g;
       system("mkdir -p $PROJECTDIR/src/$path");
     } elsif (/^#/) {
-      if (/^#ifdef/) {
+      if (/^#if/) {
         if ($ignored == 0) {
           $replace = "//gen-preproc:$replace";
         }
