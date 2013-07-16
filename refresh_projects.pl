@@ -62,6 +62,10 @@ my $manifest = `find $MOZOBJDIR/$MOZAPPDIR/base -name AndroidManifest.xml`;
 if (stat("$PROJECTDIR/AndroidManifest.xml")) {
   unlink("$PROJECTDIR/AndroidManifest.xml");
 }
+if ($manifest eq '') {
+    print "No AndroidManifest.xml found. Build Fennec and try again.\n";
+    exit 1;
+}
 chomp($manifest);
 my $smanifest = `find $MOZSRCDIR/$MOZAPPDIR/base -name AndroidManifest.xml.in`;
 chomp($smanifest);

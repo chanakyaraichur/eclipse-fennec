@@ -11,7 +11,10 @@ sub sed {
   }
 }
 
-system("/usr/bin/perl refresh_projects.pl ");
+if (system("/usr/bin/perl refresh_projects.pl ") != 0) {
+  print "Aborting project build due to errors.\n";
+  exit 1;
+}
 
 my $MOZOBJDIR="";
 my $MOZSRCDIR="";
